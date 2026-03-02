@@ -1,64 +1,77 @@
 dataset:
-  name: "New Plant Diseases Dataset"
-  root_dir: "data/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)"
-  train_dir: "train"
-  valid_dir: "valid"
-  test_dir: "test"
-  num_classes: 38
   image_size: 256
   input_size: 224
-  mean: [0.485, 0.456, 0.406]  # ImageNet mean (korigovati nakon analize)
-  std: [0.229, 0.224, 0.225]   # ImageNet std (korigovati nakon analize)
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  name: New Plant Diseases Dataset
+  num_classes: 38
+  root_dir: data/New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+  test_dir: test
+  train_dir: train
+  valid_dir: valid
 
 preprocessing:
-  resize: 224
   center_crop: null
   normalize: true
-  use_dataset_stats: true    # true = izracunaj mean/std iz train seta
+  resize: 224
+  use_dataset_stats: true
 
 augmentation:
   enabled: true
-  policy: "medium"            # "light", "medium", "strong", "custom"
-
   light:
-    horizontal_flip_p: 0.5
-    vertical_flip_p: 0.0
-    rotation_limit: 15
     brightness_limit: 0.1
     contrast_limit: 0.1
-
-  medium:
     horizontal_flip_p: 0.5
-    vertical_flip_p: 0.1
-    rotation_limit: 30
+    rotation_limit: 15
+    vertical_flip_p: 0.0
+  medium:
+    blur_limit: 3
     brightness_limit: 0.2
     contrast_limit: 0.2
-    blur_limit: 3
-    noise_var_limit: [10.0, 30.0]
-    hue_shift_limit: 10
-    sat_shift_limit: 20
-
-  strong:
     horizontal_flip_p: 0.5
-    vertical_flip_p: 0.2
-    rotation_limit: 45
-    brightness_limit: 0.3
-    contrast_limit: 0.3
+    hue_shift_limit: 10
+    noise_var_limit:
+    - 10.0
+    - 30.0
+    rotation_limit: 30
+    sat_shift_limit: 20
+    vertical_flip_p: 0.1
+  policy: medium
+  strong:
     blur_limit: 5
-    noise_var_limit: [10.0, 50.0]
-    hue_shift_limit: 15
-    sat_shift_limit: 30
-    coarse_dropout_max_holes: 8
+    brightness_limit: 0.3
     coarse_dropout_max_height: 24
+    coarse_dropout_max_holes: 8
     coarse_dropout_max_width: 24
-    shift_limit: 0.1
-    scale_limit: 0.2
+    contrast_limit: 0.3
     elastic_alpha: 120
     elastic_sigma: 6
+    horizontal_flip_p: 0.5
+    hue_shift_limit: 15
+    noise_var_limit:
+    - 10.0
+    - 50.0
+    rotation_limit: 45
+    sat_shift_limit: 30
+    scale_limit: 0.2
+    shift_limit: 0.1
+    vertical_flip_p: 0.2
 
 dataloader:
   batch_size: 64
   num_workers: 2
+  persistent_workers: true
   pin_memory: true
   prefetch_factor: 2
-  persistent_workers: true
+
+training:
+  epochs: 20
+  learning_rate: 0.001
+  model_name: efficientnet_b0
+  weight_decay: 0.0001

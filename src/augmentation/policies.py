@@ -1,6 +1,5 @@
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from typing import Dict, Any
 
 
 def get_train_transforms(config: dict, policy: str = None) -> A.Compose:
@@ -42,7 +41,7 @@ def get_train_transforms(config: dict, policy: str = None) -> A.Compose:
                 p=0.4,
             ),
             A.GaussianBlur(blur_limit=p_cfg.get("blur_limit", 3), p=0.2),
-            A.GaussNoise(var_limit=p_cfg.get("noise_var_limit", (10.0, 30.0)), p=0.2),
+            A.GaussNoise(std_range=(0.01, 0.05), p=0.2),
             A.HueSaturationValue(
                 hue_shift_limit=p_cfg.get("hue_shift_limit", 10),
                 sat_shift_limit=p_cfg.get("sat_shift_limit", 20),
@@ -65,37 +64,17 @@ def get_train_transforms(config: dict, policy: str = None) -> A.Compose:
                 border_mode=0,
                 p=0.5,
             ),
-            A.ElasticTransform(
-                alpha=p_cfg.get("elastic_alpha", 120),
-                sigma=p_cfg.get("elastic_sigma", 6),
-                p=0.2,
+            A.RandomBrightnessContrast(
+                brightness_limit=p_cfg.get("brightness_limit", 0.3),
+                contrast_limit=p_cfg.get("contrast_limit", 0.3),
+                p=0.5,
             ),
-            A.OneOf([
-                A.RandomBrightnessContrast(
-                    brightness_limit=p_cfg.get("brightness_limit", 0.3),
-                    contrast_limit=p_cfg.get("contrast_limit", 0.3),
-                ),
-                A.CLAHE(clip_limit=4.0),
-                A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-            ], p=0.5),
+            A.GaussianBlur(blur_limit=p_cfg.get("blur_limit", 5), p=0.2),
+            A.GaussNoise(std_range=(0.01, 0.1), p=0.2),  # ISPRAVLJENO!
             A.HueSaturationValue(
                 hue_shift_limit=p_cfg.get("hue_shift_limit", 15),
                 sat_shift_limit=p_cfg.get("sat_shift_limit", 30),
                 val_shift_limit=15,
-                p=0.4,
-            ),
-            A.OneOf([
-                A.GaussianBlur(blur_limit=p_cfg.get("blur_limit", 5)),
-                A.MotionBlur(blur_limit=5),
-                A.MedianBlur(blur_limit=5),
-            ], p=0.2),
-            A.GaussNoise(var_limit=p_cfg.get("noise_var_limit", (10.0, 50.0)), p=0.2),
-            A.CoarseDropout(
-                max_holes=p_cfg.get("coarse_dropout_max_holes", 8),
-                max_height=p_cfg.get("coarse_dropout_max_height", 24),
-                max_width=p_cfg.get("coarse_dropout_max_width", 24),
-                min_holes=1,
-                fill_value=0,
                 p=0.3,
             ),
             A.Normalize(mean=mean, std=std),
@@ -103,13 +82,11 @@ def get_train_transforms(config: dict, policy: str = None) -> A.Compose:
         ])
 
     else:
-        raise ValueError(f"Unknown policy: {policy}. Use: light, medium, strong")
+        # Default: medium
+        return get_train_transforms(config, policy="medium")
 
 
 def get_valid_transforms(config: dict) -> A.Compose:
-    """
-    Ne radimo augmentaciju za valid skup, samo resize i normalize
-    """
     ds_cfg = config.get("dataset", {})
     prep_cfg = config.get("preprocessing", {})
 
