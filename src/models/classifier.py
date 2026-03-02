@@ -13,6 +13,16 @@ def create_model(num_classes: int, model_name: str = "resnet50", pretrained: boo
         weights = models.EfficientNet_B0_Weights.DEFAULT if pretrained else None
         model = models.efficientnet_b0(weights=weights)
         model.classifier[1] = nn.Linear(model.classifier[1].in_features, num_classes)
+        
+    elif model_name == "resnet18":
+        weights = models.ResNet18_Weights.DEFAULT if pretrained else None
+        model = models.resnet18(weights=weights)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+    
+    elif model_name == "resnet50":
+        weights = models.ResNet50_Weights.DEFAULT if pretrained else None
+        model = models.resnet50(weights=weights)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     
