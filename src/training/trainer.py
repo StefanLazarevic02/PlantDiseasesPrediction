@@ -43,13 +43,12 @@ class Trainer:
             weight_decay=self.weight_decay
         )
         
-        # Bez verbose parametra
         self.scheduler = ReduceLROnPlateau(
             self.optimizer,
             mode='min',
             factor=0.5,
             patience=3
-        ) # Smanjuje learning rate ako se validacioni loss ne poboljsava 3 epohe
+        )
         
         self.history = {
             "train_loss": [], "train_acc": [],
@@ -58,6 +57,34 @@ class Trainer:
         }
         self.best_acc = 0.0
         self.best_model = None
+
+    def _save_checkpoint(self, path: Path, epoch: int, is_best: bool = False):
+        payload = {
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'best_acc': self.best_acc,
+            'history': self.history,
+            'config': self.config
+        }
+        torch.save(payload, path)
+        if is_best:
+            print(f"New best model saved! (Acc: {self.best_acc:.2f}%)")
+
+    def _try_resume(self, save_path: Path):
+        latest_ckpt = save_path / "latest_checkpoint.pth"
+        if not latest_ckpt.exists():
+            return 0  # start epoch
+
+        ckpt = torch.load(latest_ckpt, map_location=self.device)
+        self.model.load_state_dict(ckpt['model_state_dict'])
+        self.optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+        self.best_acc = ckpt.get('best_acc', 0.0)
+        self.history = ckpt.get('history', self.history)
+
+        start_epoch = ckpt['epoch'] + 1
+        print(f"Resuming training from epoch {start_epoch + 1}/{self.epochs} (best_acc={self.best_acc:.2f}%)")
+        return start_epoch
     
     def train_epoch(self):
         self.model.train()
@@ -65,7 +92,7 @@ class Trainer:
         correct = 0
         total = 0
         
-        pbar = tqdm(self.train_loader, desc="Training", leave=False)    # Progres bar tokom treninga
+        pbar = tqdm(self.train_loader, desc="Training", leave=False)
         for images, labels in pbar:
             images = images.to(self.device)
             labels = labels.to(self.device)
@@ -123,9 +150,11 @@ class Trainer:
         print(f"Train samples: {len(self.train_loader.dataset):,}")
         print(f"Valid samples: {len(self.valid_loader.dataset):,}")
         print(f"{'='*60}")
+
+        start_epoch = self._try_resume(save_path)
         
         start_time = time.time()
-        for epoch in range(self.epochs):
+        for epoch in range(start_epoch, self.epochs):
             print(f"\nEpoch {epoch+1}/{self.epochs}")
             print("-" * 40)
             
@@ -147,18 +176,14 @@ class Trainer:
             
             print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
             print(f"Valid Loss: {valid_loss:.4f} | Valid Acc: {valid_acc:.2f}%")
+
+            # snimi latest SVAKU epohu
+            self._save_checkpoint(save_path / "latest_checkpoint.pth", epoch, is_best=False)
             
             if valid_acc > self.best_acc:
                 self.best_acc = valid_acc
                 self.best_model = copy.deepcopy(self.model.state_dict())
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': self.best_model,
-                    'optimizer_state_dict': self.optimizer.state_dict(),
-                    'best_acc': self.best_acc,
-                    'config': self.config
-                }, save_path / "best_model.pth")
-                print(f"New best model saved! (Acc: {valid_acc:.2f}%)")
+                self._save_checkpoint(save_path / "best_model.pth", epoch, is_best=True)
         
         total_time = time.time() - start_time
         print(f"\n{'='*60}")
