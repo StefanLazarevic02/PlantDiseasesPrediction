@@ -23,6 +23,10 @@ def create_model(num_classes: int, model_name: str = "resnet50", pretrained: boo
         weights = models.ResNet50_Weights.DEFAULT if pretrained else None
         model = models.resnet50(weights=weights)
         model.fc = nn.Linear(model.fc.in_features, num_classes)
+    elif model_name == "vgg16":
+        weights = models.VGG16_Weights.DEFAULT if pretrained else None
+        model = models.vgg16(weights=weights)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
     else:
         raise ValueError(f"Unknown model: {model_name}")
     

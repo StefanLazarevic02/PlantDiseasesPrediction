@@ -10,7 +10,7 @@ from src.models.classifier import create_model
 import matplotlib.pyplot as plt
 
 
-MODELS = ["resnet18", "resnet50", "efficientnet_b0"]
+MODELS = ["resnet18", "resnet50", "efficientnet_b0", "vgg16"]
 
 
 def load_model(model_name, config, device):

@@ -12,7 +12,7 @@ from src.models.classifier import create_model
 from src.training.trainer import Trainer
 
 SEED = 42
-MODELS = ["resnet18", "resnet50", "efficientnet_b0"]
+MODELS = ["resnet18", "resnet50", "efficientnet_b0", "vgg16"]
 
 def set_seed(seed):
     random.seed(seed)

@@ -72,7 +72,7 @@ def create_weighted_sampler(dataset: PlantDiseaseDataset) -> WeightedRandomSampl
         weights=sample_weights,
         num_samples=len(sample_weights),
         replacement=True,
-    )
+    )   # Ublazava efekat imbalance tako sto ce vise puta uzeti uzorke iz manjih klasa
 
 
 def create_dataloaders(

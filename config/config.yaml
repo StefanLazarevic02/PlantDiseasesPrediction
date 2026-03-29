@@ -72,7 +72,7 @@ dataloader:
   drop_last: true
 
 training:
-  epochs: 20
+  epochs: 8
   learning_rate: 0.001
   model_name: efficientnet_b0
   weight_decay: 0.0001

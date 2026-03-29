@@ -43,13 +43,13 @@ class Trainer:
             weight_decay=self.weight_decay
         )
         
-        # BEZ verbose parametra!
+        # Bez verbose parametra
         self.scheduler = ReduceLROnPlateau(
             self.optimizer,
             mode='min',
             factor=0.5,
             patience=3
-        )
+        ) # Smanjuje learning rate ako se validacioni loss ne poboljsava 3 epohe
         
         self.history = {
             "train_loss": [], "train_acc": [],
@@ -65,7 +65,7 @@ class Trainer:
         correct = 0
         total = 0
         
-        pbar = tqdm(self.train_loader, desc="Training", leave=False)
+        pbar = tqdm(self.train_loader, desc="Training", leave=False)    # Progres bar tokom treninga
         for images, labels in pbar:
             images = images.to(self.device)
             labels = labels.to(self.device)
